@@ -5,7 +5,7 @@ My classwork for BIMM143 Spring 2025 at UCSD
 using `create_github_token()` from the [*gitcreds*] package & 
 the `gitcreds_set()` function from the [*usethis*] package.
 
-- 04 Intro to R
+- (04 Intro to R)[https://github.com/GabriellaTan/bimm143_github1/tree/main/Class04]
 
 - 05 Advanced graphics with **ggplot2**
 
