@@ -1,0 +1,117 @@
+---
+title: "Class 05 - DataVis with ggplot2"
+author: "Gabriella Tanoto (A18024184)"
+format: html
+toc: true
+---
+
+# Background
+Graphics system examples: "base R" -- included in the package. But, we usually use the **ggplot2**
+Let's compare "base" and **ggplot2**. Let's check our example data, `cars`:
+
+```{r}
+head(cars, 6)
+```
+
+## baseR vs. ggplot2
+
+In baseR, i can just call `plot()`
+```{r}
+plot(cars)
+```
+
+Let's call out **ggplot2**!
+
+First, INSTALL PACKAGE, if not in your R yet.
+
+> KEY POINT: Only install packages in R console, don't write it in quarto, cuz u r gonna have to install it every time they render T^T, not good. [this thing shows like a notes]
+
+Before we use the package, you have to load it up using `library()`
+```{r}
+library(ggplot2)
+```
+
+Every ggplot has *at least* 3 things:
+
+- **Data** (in our case, `cars`)
+- **Aes**thetics (how the data maps into the plot; i.e., x-axis and y-axis)
+- **Geom**etries (determines how the plot will be drawn; i.e., boxplot, dotplots/points, lines, columns, etc.)
+
+```{r}
+ggplot(data=cars, 
+       aes(x= speed, y= dist)) +
+  geom_point()
+```
+
+For simple plots, ggplot is a little more verbose than base R. But defaults of ggplot is nicer!
+It's easier to customize ggplots than it is to customize baseR. We can add the layers to *aes* and *themes*. For complicated plots, it's much more efficient and structured
+
+>Adding a line to show relationship between speed to stopping distance (ie, adding another 'layer')!
+
+```{r}
+carplot <- ggplot(cars) + 
+       aes(x= speed, y= dist) +
+  geom_point() + geom_smooth(se=TRUE, method="lm")
+
+#se = TRUE/FALSE is when u want the standard error area or not.
+#"lm" ('linear models') is to linearize the fit. 
+
+carplot
+```
+
+>Adding Title and Subtitles!
+
+```{r}
+carplot + labs(title="Cars", 
+               subtitle="Speed vs Distance to stop for old ahh cars") +
+  xlab("Speed (mph)")+ 
+  ylab("Distance to stop (miles)")+
+  theme_bw()
+```
+
+## Gene Expression Plot: Using different **aes** and **geoms**
+
+### Open the gene expression example dataset
+```{r}
+url <- "https://bioboot.github.io/bimm143_S20/class-material/up_down_expression.txt"
+genes <- read.delim(url)
+head(genes)
+```
+>Q: How many genes are in this dataset?
+    - counting the rows: nrow(<dataset>)
+    - counting the columns: ncol(<dataset>)
+
+```{r}
+nrow(genes)
+ncol(genes)
+```
+> Q: What are the column names? 
+
+```{r}
+colnames(genes)
+```
+>Q: How many "UP" and "DOWN" regulated genes are there?
+
+```{r}
+sum(genes$State=="up")
+#CAN Only see the number of up's
+```
+OR:
+```{r}
+table(genes$State)
+```
+
+>Q: Making the 1st plot~
+
+```{r}
+ggplot(genes) + 
+  aes(x= Condition1, y= Condition2, color=State) +
+  scale_color_manual(values=c("red", "grey", "blue")) +
+  geom_point() +
+  labs(title= "Drugs influence on genes expressions",
+       subtitle= "Up-regulated and Down-regulated genes",
+       x= "Control (no drugs)",
+       y= "Drugged") +
+  theme_bw()
+```
+
