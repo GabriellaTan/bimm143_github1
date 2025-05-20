@@ -1,0 +1,171 @@
+---
+title: "Class10 - Structural Bioinformatics pt 1"
+author: "Gabriella Tanoto (A18024184)"
+format: html
+toc: true
+---
+
+# 1. Introduction to the RCSB Protein Data Bank (PDB)
+
+
+The main repository of biomolecular structure data is called **PDB** ([Protein Data Bank](http://www.rcsb.org/)). It's the second oldest database, after GenBank.
+
+## PDB Statistics
+
+The CSV file of the PDB data distributions. It was accessed by:
+“Analyze” > “PDB Statistics” > “by Experimental Method and Molecular Type”
+
+```{r}
+PDBdata <- read.csv("Data Export Summary.csv", row.names = 1)
+
+```
+
+> Q1: What percentage of structures in the PDB are solved by X-Ray and Electron Microscopy.
+
+```{r}
+
+xray <- gsub(",", "", PDBdata$X.ray) #substitute comma for nothing.
+xray <- as.integer(xray) # converting to nurmeric.
+sum(xray)
+
+```
+Now, we turn this snippet into a function, so we can reuse it for something else. 
+
+```{r}
+comma.sum <- function(x) {
+  y <- gsub(",", "", x)
+  y <- as.integer(y)
+  return(sum(y))
+}
+
+#Try it!
+comma.sum(PDBdata$X.ray)
+```
+
+Now we answer the question!
+
+```{r}
+xray.sum <- comma.sum(PDBdata$X.ray)
+EM.sum <- comma.sum(PDBdata$EM)
+total.sum <- comma.sum(PDBdata$Total)
+
+#Division:
+(xray.sum+EM.sum)/total.sum*100 #93.7% For both EM and X Ray
+
+xray.sum/total.sum*100 #82.4%
+
+EM.sum/total.sum*100 #11.3%
+```
+
+- X-ray solved **82.4%** of PBD structures
+- EM solved **11.3%** of PDB structures
+
+> Q2: What proportion of structures in the PDB are protein (only)?
+
+```{r}
+comma.sum(PDBdata["Protein (only)","Total"])/comma.sum(PDBdata$Total)*100
+```
+**86.2%** of the structures in PDB is just the `protein (only)`
+
+> Q3: Type HIV in the PDB website search box on the home page and determine how many HIV-1 protease structures are in the current PDB?
+
+*(SKIPPED)*
+
+
+# 2. Visualizing the HIV-1 protease structure
+
+Explore the HIV-1 protease structure with PDB code:`1HSG`
+Molstar homepage [here](https://molstar.org/viewer/).
+
+![Fig 1. A first view of HIV-Pr](1HSG.png)
+This is a protease protein, that cuts off aspartic amino acid in HIV replication. The small molecule inhibitor is a Merck Drug (MK1). The hydrogen is not shown in this structure, because it's too small compared to the resolution (of 2Å). We can change the molecular views
+
+![Fig 2. A molecular surface view showing binding cavity](1HSGMolSurface.png)
+
+
+![Fig 3. The catalitically important Asp25 amino acids and drug-interacting HOH 308 water molecule](1HSGSmallMol.png)
+
+So far, we've used the MolStar website to view protein structures, but we haven't done much bioinformatics.
+
+# 3. Using the Bio3D in R
+
+First, install & load the bio3D package. It is focused on structural bioinformatics analysis and allows us to read and analyze PB (and related) data. 
+
+```{r}
+library(bio3d)
+```
+
+Read in some data from PDB
+```{r}
+pdb <- read.pdb("1hsg")
+pdb
+```
+
+```{r}
+#lookng at the attributes in the pdb data:
+attributes(pdb)
+
+#open one of the attributes.
+head(pdb$atom)
+head(pdbseq(pdb))
+
+```
+> Q7: How many amino acid residues are there in this pdb object? 
+
+There are **198 amino acid** (198 alpha carbons, each is an amino acid)
+
+> Q8: Name one of the two non-protein residues? 
+
+**Water** (HOH) is one of them.
+
+> Q9: How many protein chains are in this structure? 
+
+There are **2** protein chains, A and B. 
+
+## Molecular Visualization in R (interactive!)
+
+We can make a quick 3D vizualisation with the `bio3dview` package.
+Use the following to install.
+
+`{r}
+install.packages("pak")
+pak::pak("bioboot/bio3dview")
+install.packages("NGLVieweR")`
+
+```{r}
+library(bio3dview)
+library(NGLVieweR)
+view.pdb(pdb) |>
+  setSpin()
+
+view.pdb(pdb, backgroundColor = "black", colorScheme = "sse") |> setSpin()
+```
+
+```{r}
+sel <- atom.select(pdb, resno=25)
+view.pdb(pdb, cols = c("green", "yellow"),
+         highlight= sel, highlight.style= "spacefill") |> setRock()
+```
+
+## Predicting Functional motions of a single structure
+
+We can finish off today with a bioinformatics prediction of functional motions od a protein.
+
+We will run a Normal Moda Analysis (NMA) -- it inserts an energy into the prediction 
+
+```{r}
+adk <- read.pdb("6s36")
+adk
+
+
+m <- nma(adk)
+plot(m)
+
+```
+
+We can write our a trajectory of the predicted dynamics and view in molstar.
+```{r}
+mktrj(m, file="adk_m7.pdb")
+```
+
+This makes it into a playable animation in Molstar if we import it from files. 

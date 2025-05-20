@@ -1,0 +1,116 @@
+---
+title: "Class11: Comparative Structural Analysis"
+author: "Gabriella Tanoto (A18024184)"
+format: pdf
+---
+
+Load the packages we will need to analyze protein structures. `MSA` package can help with our alignment!
+
+```{r}
+library(bio3d)
+# BiocManager::install("msa")
+library(msa)
+```
+
+We will analyse the ADK, starting with a single ADK database accession code: "1ake_A"
+
+Using the `get.seq()` function from the `Bio3d` package, we can obtain the sequence for this protein.
+```{r}
+id <-  "1ake_A"
+aa <- get.seq(id)
+aa
+```
+Now, we can search the PDB (Protein Data Bank) to find all related entries!
+```{r}
+blast <- blast.pdb(aa)
+```
+```{r}
+attributes(blast)
+```
+
+```{r}
+head(blast$hit.tbl)
+```
+
+Make a little summary table for these results:
+```{r}
+hits <- plot(blast) #shows all the attributes of the BLAST results, but in a visual way.
+```
+Our "top hits" — the most similar entries in the database — are:
+```{r}
+hits$pdb.id
+```
+
+We can download the related PDB files, these are all the proteins related to 1AKE. This is viewed in [Molstar.org](https://molstar.org/viewer/)
+```{r}
+files <- get.pdb(hits$pdb.id, path="pdbs", split=TRUE, gzip=TRUE)
+```
+
+This is hard to see, we cannot really make sense of how it works. Instead, let's make it into an aligned version so we can see the mobile parts. 
+
+Aligning the related PDBs:
+```{r}
+pdbs <- pdbaln(files, fit = TRUE, exefile="msa")
+
+```
+
+Side-note:
+```{r}
+library(bio3dview)
+
+view.pdbs(pdbs)
+
+```
+
+This is better, but it's still difficult to see what is similar and what's different in all these structures, or indeed, learn much about how this family works.
+
+Let's try PCA:
+```{r}
+pc <- pca(pdbs)
+plot(pc) #last panel is the screeplot.
+ 
+```
+```{r}
+plot(pc, pc.axes=1:2)
+#these two clusters show the active and inactive form of this protein.
+```
+```{r}
+view.pca(pc)
+```
+
+Write a PDB trajectory for molstar!
+```{r}
+mktrj(pc, file="pca_results.pdb")
+```
+Here, we can actually see how it works frame per frame :D
+With that, we can actually see how this protein changes conformation as it becomes activated and inactive!
+
+> Unfortunately, structures only shows 0.8% of the many Genome sequences that we can utilize. So, we can use AlphaFold to predict the structure from DNA sequence! 
+
+
+# Structural prediction
+
+People have been using physics-based and knowledge-based approach. In the physics-based approach, they use the **potential energy** terms that is from the Physical Theories; from bond stretches, angle, and rotations, and then take into account both *bonded* and *non-bonded* interactions.
+
+- *Physics-Based:*
+
+There is many strengths: interpretable, broadly applicable, and cleae pathways to improve accuracy. Problems: have to be approximate (we don't have big enough sources).
+
+- *Knowledge-Based:*
+
+We can use previous knowledge of protein structures, how it usually forms. Strength: It's easier than the physics-based predictions, and computationally fast. Problems: it's limited by the availability of data (if it's a new protein that hasn't been much studied, it's not good enough to make good predictions).
+
+CASP is used to check how good people's results are to get better prediction of protein folding. 
+
+# AlphaFold2
+
+Multiple sequence alignment is actually the key to the winning method. The MSA detects Co-Evolutions, which indicates that the amino acid probably contacts each other!! << KEY
+
+> Contacts in proteins are evolutionarily conserved, encoded in an MSA as coevolution.
+
+AlphaFold takes the predicted contact maps, where spots that are outside of the diagonal is contact points. Then, once they have the bigger picture of prediction, they used the Physics to refine it.
+
+> MSA --> contact points --> Knowledge & Physics based refining.
+
+We can use the website [AlphaFold2.ipynb](https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb)
+
