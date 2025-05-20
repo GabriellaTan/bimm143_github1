@@ -1,0 +1,315 @@
+---
+title: "Class14 - RNA Seq Mini-Project"
+author: "Gabriella Tanoto (A18024184)"
+format: pdf
+toc: true
+---
+
+Here, we are performing a complete RNA-Seq analysis from counts to pathways, and its biological interpretation.
+
+The data for for hands-on session comes from GEO entry: GSE37704, which is associated with the following publication:
+
+> Trapnell C, Hendrickson DG, Sauvageau M, Goff L et al. "Differential analysis of gene regulation at transcript resolution with RNA-seq". Nat Biotechnol 2013 Jan;31(1):46-53. PMID: 23222703
+
+The authors report on differential analysis of lung fibroblasts in response to loss of the developmental transcription factor HOXA1. Their results and others indicate that HOXA1 is required for lung fibroblast and HeLa cell cycle progression. 
+
+# Load Packages
+Load up our packages:
+```{r, message=FALSE}
+library(DESeq2)
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+library(pathview)
+library(gage)
+library(gageData)
+library(ggplot2)
+```
+
+
+# Data Import
+Let's input our data:
+```{r}
+colData <- read.csv("GSE37704_metadata.csv", row.names = 1)
+countData <- read.csv("GSE37704_featurecounts.csv", row.names = 1)
+```
+
+```{r}
+head(colData)
+head(countData)
+```
+# TIdying up our datasets
+Check correspondence of the colData and countData columns:
+```{r}
+rownames(colData)
+```
+```{r}
+colnames(countData)
+```
+```{r}
+#We ask R if they match:
+rownames(colData) == colnames(countData)
+```
+> Q. Getting rid of the length column:
+
+```{r}
+counts <- countData[,-1]
+```
+
+Check again if they match now:
+```{r}
+all(rownames(colData) == colnames(counts))
+```
+
+# Remove the 0 count genes
+> Q. We need to remove all the 0 counts genes:
+
+We will have rows in `counts` for genes that we cannot say anything about because they have 0 expression in the particular tissue we are looking at.
+There's no point in including them in our analysis. 
+
+```{r}
+head(counts)
+```
+
+
+If the rowSums() of the gene is 0 (have no count data), we should exclude it.
+```{r}
+include.genes <- rowSums(counts)!=0
+cleancounts <- counts[include.genes, ]
+```
+
+> Q. How many genes do we have left?
+
+```{r}
+nrow(cleancounts)
+```
+We have **15,975** genes left to analyze.
+
+# Set up the DESeq object for analysis
+
+```{r}
+dds <- DESeqDataSetFromMatrix(countData = cleancounts,
+                              colData = colData,
+                              design = ~condition)
+```
+
+# Run the DESeq analysis
+```{r}
+dds <- DESeq(dds)
+```
+```{r}
+attributes(dds)
+```
+
+
+# Extract the results
+```{r}
+res <- results(dds)
+head(res)
+```
+> Q. Call the summary() function on your results to get a sense of how many genes are up or down-regulated at the default 0.1 p-value cutoff.
+
+```{r}
+summary(res)
+```
+Acording to the p-value cut off at 0.1 for statistical significance:
+
+- 4349 genes are upregulated
+- 4396 genes are downregulated
+
+
+# Add the gene annotations
+
+> Q. Use the mapIDs() function multiple times to add SYMBOL, ENTREZID and GENENAME annotation to our results.
+
+```{r}
+res$symbol <- mapIds(x = org.Hs.eg.db, #this is the ENSG###
+              keys = rownames(res),
+              keytype = "ENSEMBL",
+              column = "SYMBOL")
+
+res$name <- mapIds(x = org.Hs.eg.db,
+                  keys = res$symbol,
+                  keytype = "SYMBOL",
+                  column = "GENENAME")
+
+res$entrez <-  mapIds(x= org.Hs.eg.db,
+                      keys = res$symbol,
+                      keytype = "SYMBOL",
+                      column = "ENTREZID")
+```
+
+Let's see the result all thru and thru:
+```{r}
+head(res)
+```
+
+# Save the results to the CSV file
+
+> Q. Finally for this section let's reorder these results by adjusted p-value and save them to a CSV file in your current project directory.
+
+Once we have the res datas, we can save it into a csv file:
+```{r}
+library(readr)
+res = res[order(res$pvalue),]
+write_csv(as.data.frame(res), file="Results_for_the_HOXA1_Genes.csv")
+```
+
+# Result visualization
+
+> Q. Volcano plot, with color and axis labels:
+
+Making the plot:
+```{r}
+mycols <- rep("gray", nrow(res)) #repeating grey to every points in our graph. 
+mycols[res$log2FoldChange <= -2] <- "blue"
+mycols[res$log2FoldChange >= 2] <- "purple"
+mycols[(res$padj) >= 0.005 & (abs(res$log2FoldChange) > 2 )] <- "red" 
+
+ggplot(as.data.frame(res)) +
+  aes(x = log2FoldChange, y = -log(padj))+
+  geom_point(color= mycols)+
+  theme_minimal() +
+  xlab("Fold-Change (in log2)") + ylab("-log(adjusted P-value)") +
+  ggtitle("Volcano plot of Differentially Expressed Genes in HOXA1 knockouts") +
+  ggeasy::easy_center_title()
+```
+
+
+# Pathway Analysis
+
+We are using the data from Kegg, to see which pathways our highly-expressed genes are involved in.
+
+```{r}
+data(kegg.sets.hs)
+data(sigmet.idx.hs)
+```
+
+We only want the signaling & metabolic pathways.
+```{r}
+kegg.sets.hs=kegg.sets.hs[sigmet.idx.hs]
+```
+
+Head over to the first three pathways:
+```{r}
+head(kegg.sets.hs, 3)
+```
+
+```{r}
+foldchanges = res$log2FoldChange
+names(foldchanges) = res$entrez
+head(foldchanges)
+```
+
+```{r}
+keggres = gage(foldchanges, gsets=kegg.sets.hs)
+```
+
+```{r}
+attributes(keggres)
+```
+
+```{r}
+head(keggres$less)
+```
+Now, let's visualize it thru the KEGG part. We are going to use the `pathview` package
+
+> Cell cycle Pathway
+
+```{r}
+pathview(gene.data=foldchanges, pathway.id="hsa04110")
+```
+![The Differetially-Expressed Genes in the Cell Cylcle pathway](hsa04110.pathview.png)
+
+```{r, message=FALSE}
+pathview(gene.data=foldchanges, pathway.id="hsa04110", kegg.native=FALSE)
+```
+
+Now, we can analyse the top5 **up-regulated** pathways.
+```{r}
+## Focus on top 5 upregulated pathways
+keggrespathways <- rownames(keggres$greater)[1:5]
+
+# Extract the 8 character long IDs part of each string
+keggresids = substr(keggrespathways, start=1, stop=8)
+keggresids
+
+```
+
+```{r}
+pathview(gene.data=foldchanges, pathway.id=keggresids, species="hsa")
+```
+
+Here are the plots generated from the `pathview()` function above:
+![](hsa00140.pathview.png)
+![](hsa04142.pathview.png)
+![](hsa04330.pathview.png)
+![](hsa04630.pathview.png)
+![](hsa04640.pathview.png)
+
+
+> Can you do the same procedure as above to plot the pathview figures for the top 5 down-reguled pathways?
+
+```{r}
+keggrespathways.less <- rownames(keggres$less)[1:5]
+keggless.ids = substr(keggrespathways.less, start=1, stop=8)
+keggless.ids
+```
+
+```{r}
+pathview(gene.data = foldchanges, pathway.id = keggless.ids, species = "hsa")
+```
+
+The following are the plots generated by the pathview functions, of the down-regulated genes:
+
+![](hsa04110.pathview.png)
+![](hsa04114.pathview.png)
+![](hsa03440.pathview.png)
+![](hsa03013.pathview.png)
+![](hsa03030.pathview.png)
+
+# GO (Gene Ontology)
+
+This is consistent with the last one, but it's a more specific view of the cell cycle. 
+
+```{r}
+data(go.sets.hs)
+data(go.subs.hs)
+
+# Focus on Biological Process subset of GO
+gobpsets = go.sets.hs[go.subs.hs$BP]
+
+gobpres = gage(foldchanges, gsets=gobpsets, same.dir=TRUE)
+
+lapply(gobpres, head)
+```
+
+# Reactome Analysis
+
+Make a little file of our significant genes that we can upload to the [reactome webpage](https://reactome.org/PathwayBrowser/#/R-HSA-69278&DTAB=AN&ANALYSIS=MjAyNTA1MTUxODQzMjBfMzI4MzM%253D)
+```{r}
+sig_genes <- res[res$padj <= 0.05 & !is.na(res$padj), "symbol"]
+print(paste("Total number of significant genes:", length(sig_genes)))
+```
+
+```{r}
+write.table(sig_genes, file="significant_genes.txt", row.names=FALSE, col.names=FALSE, quote=FALSE)
+```
+
+![The rendering from the reactome.org website](R-HSA-69278.png)
+
+> Q: What pathway has the most significant “Entities p-value”? Do the most significant pathways listed match your previous KEGG results? What factors could cause differences between the two methods?
+
+The cell cycle pathway has the most significant Entity P-Value (9.3E-5). Yes, it does match the KEGG result, as the first one in KEGG was also about cell cycle. Although the others in the Reactome list indicates very specific pathways, e.g., "Mitotic Spindle Checkpoint" and "Mitotic Prometaphase", these are also part of the cell cycle. So, the KEGG and the Reactome results match -- GOOD!
+
+# GO online
+
+Gene Set Gene Ontology (GO) Enrichment is a method to determine over-represented or under-represented GO terms for a given set of genes. GO terms are formal structured controlled vocabularies (ontologies) for gene products in terms of their biological function. The goal of this analysis is to determine the biological process the given set of genes are associated with.
+
+To perform Gene Set GO Enrichment online go to the website http://www.geneontology.org/page/go-enrichment-analysis. Paste your significant gene list from section 4. Then, select "biological process" and "homo sapiens", and click submit.
+
+> Q: What pathway has the most significant “Entities p-value”? Do the most significant pathways listed match your previous KEGG results? What factors could cause differences between the two methods?
+
+According to this GO online tool, the biological process mapped with the highest p-value is "Cellular Process", which also includes the cell growth if we click on the entry. 
+In conclusion, yes, it gives us essentially the same result between the three different ways we can see determine the pathways in which our Differentially Expressed Genes are affecting. 
+
+In the GO webpage, the terms seems to be more concise and formal, so it might not be as intuitive as the previous sources. Another factor that might make it different is the presentation of the data, since this one seems to have the details available once we have clicked and open the entry. 
