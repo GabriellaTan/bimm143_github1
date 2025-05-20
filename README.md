@@ -1,2 +1,2 @@
-# bimm143_github1
+# BIMM143
 My classwork for BIMM143 Spring 2025 at UCSD
