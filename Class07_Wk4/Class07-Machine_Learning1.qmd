@@ -1,0 +1,229 @@
+---
+title: "Class 07 - Machine Learning pt. 1"
+author: "Gabriella Tanoto (A18024184)"
+format: pdf
+toc: true
+mainfont: Times
+title-block-banner: "#3F008F"
+---
+
+Today, we are exploring unsupervised machine learning starting with *clustering* and *dimentionality reduction*!
+
+## Clustering 
+
+Let's make a data where we know what the answer should be, just to get used to the function and see if it works! The `rnorm()` function will help us.
+```{r}
+hist(rnorm(250, 23, 30))
+```
+Return 30 numbers centered at -3
+
+```{r}
+c(rnorm(30, -3), rnorm(30, 3))
+#same as:
+tmp <- tmp <-  c(rnorm(30,-3), rnorm(30,3))
+x <-  cbind(x=tmp, y=rev(tmp))
+```
+Now, make this into a Plot:
+
+```{r}
+plot(x)
+```
+
+### K-Means
+
+Main functuion in "base R" for K-mean clustering is called `kmeans()`
+
+```{r}
+km <- kmeans(x, centers=2) #centers refers to how many groups we want it to give us.
+  #clustering vector is which cluster each of the points are at (i.e., cluster 1 or 2). 
+km
+```
+
+The `kmeans()` function returns a list of 9 components. We can see the attributes from `attributes()` function!
+
+```{r}
+#Look at the attributes of the Km:
+attributes(km)
+```
+> Q1. How many points are in each cluster?
+
+```{r}
+km$size
+```
+
+> Q2. Cluster assignment/mamber vector?
+
+```{r}
+km$cluster
+#cluster: It's telling us which pints belong to which clusters.
+```
+
+> Q3. Cluster Centers?
+
+```{r}
+km$centers
+```
+
+> Q4. Make a plot of our `kmeans()` results, with cluster assignment different colors, and centers blue. 
+
+```{r}
+plot(x, col=km$cluster) + points(km$centers, col="blue", pch=19) 
+```
+
+>Q5. Run `k-means` again on `x`, but with 4 groups cluster, and plot the same result fig as above.
+
+```{r}
+km4 <- kmeans(x, centers= 4)
+km4
+
+#Plotting km4
+plot(x, col= km4$cluster) + points(km4$centers, col="blue", pch=19)
+```
+
+>Key point -
+**BE WARY**: \
+  Kmeans is super popular because it's easy to understand, but it can be **self-fulfilling and MISUSED**. One big limitation is: it can impose a clustering pattern even if natural grouping doesn't exist. \
+  We can just cluster anything into what we think it is, when we determine the `centers`. Say, even though it's only 2 clusters, we put in 4 and it still gives out a result.
+
+
+## Hierarchical Clustering
+
+Main function in base R is `hclust()`.
+
+You can't just pass the dataset as is into `hclust()`. We have to make a *distance matrix* (dissimilarity distance) first. But this makes it more flexible (doesn't have to be Euclidean distances only like the `kmeans()`). Flexible as in we can do sequence alignments too! 
+
+```{r}
+d <- dist(x)
+hc <- hclust(d)
+hc #not very useful without plotting it. 
+```
+
+The results of `hclust()` doesn't have very useful `print` method, but it has special `plot()` method. Will give out a "dendrogram" or a "tree diagram".
+
+```{r}
+plot(hc) +   #each labels here #each labels here is just the data label.
+  abline(h=8, col = "#E74C3C")
+```
+`hclust()` is  a bottom-up clustering method.
+
+To get our main cluster assignment (membership vector), we need to `cut` our tree.
+
+```{r}
+groups <- cutree(hc, h=8)
+groups
+```
+
+We can see the attributes of `groups` by using `table()`
+
+```{r}
+table(groups)
+```
+
+Plotting the same one (Q4) where we determine the colors of the clusters:
+```{r}
+plot(x, col= groups)
+```
+
+**Hierarchical clusterng** is distinct, in that the dendogram (tree figure) can reveal the *potential groupings* in our data, unlike K-means.
+
+
+## Dimentional Reduction
+### PCA (Principal Component Analysis)
+
+PC is a common and useful dimentionality reduction technique used in many fields, particularly Bioinformatics. It basically lines that are of *best fit* for our data. So these PC lines are better at representind the data points compared to any of the original axes. 
+
+PC's capture the "spread" of the data. The PC1 axis will capture the most variation, followed by the PC2, etc. 
+
+**Objectives of PC:**
+
+- Reduce dimentionality
+- Choose most useful characters
+
+Basically like a filter!
+
+#### Analyzing the UK food data:
+
+Importing the File:
+```{r}
+url <- "https://tinyurl.com/UK-foods"
+uk <- read.csv(url, row.names = 1) #this row.names is a function that sets the first column into row names.
+head(uk, 6)
+```
+
+Now, let's try plotting them.
+
+>Barplot
+
+```{r}
+barplot(as.matrix(uk), beside=T, col=rainbow(nrow(uk)))
+
+```
+
+>Stacked barplot
+
+```{r}
+barplot(as.matrix(uk), beside=F, col=rainbow(nrow(uk)))
+```
+
+>Pairs Plot \
+Now a more useful plot!
+
+```{r}
+pairs(uk, col=rainbow(10), pch=16)
+```
+
+
+#### PCA to the Rescue!
+
+The main function in R for PCA: `prcomp()`
+
+```{r}
+t(uk) #transposing the data, so we have the columns as the food type.
+
+pca <- prcomp(t(uk))
+summary(pca)
+```
+PC1 is the one that will catch most variation. This makes sense, since **67%** of Proportion of Variance is captured by PC1, and *29%* is captured by the PC2. 
+
+
+The `prcomp()` function returns a list of object of our results with 5 attributes/components.
+
+```{r}
+attributes (pca)
+head(pca$x)
+```
+
+The two main results in here are: `pca$x` and `pca$rotation`.
+The `pca$x` contains scores of fata on the new PC axis -- we use these to make the "PCA plot"
+
+```{r}
+library(ggplot2)
+library(ggrepel)
+
+#make a plot of pca$x of PC1 v PC2
+ggplot(pca$x)+
+  aes (PC1, PC2, label= rownames(pca$x))+
+  geom_point()+
+  geom_text_repel()
+
+```
+>This plot mainly shows that Ireland consumes quite different foods than England, Wales, and Scotland. The PC1 shows highest variation, while the PC2 shows the second highest. 
+
+The second major result is contained in the pca$rotation object or component. Let's plot to see what PCA is picking up. 
+
+```{r}
+head(pca$rotation, 4)
+```
+
+Each factor (the food) contribution to the PC1 (the new axis!):
+
+```{r}
+ggplot(pca$rotation)+
+  aes(PC1, rownames(pca$rotation))+
+  geom_col()
+```
+> This second plot shows how much each of the food types contribute to the PC; how much they affect the variance!
+
+**UNDERSTANDING THE TWO PLOTS**: 
+
+> Combined with the previous plot (L: Ireland, R: England, Wales, and Scots), the two shows that Ireland eats more fresh potatoes and soft drinks, but the Fresh fruit adn alcoholic drinks are less consumed there. 
