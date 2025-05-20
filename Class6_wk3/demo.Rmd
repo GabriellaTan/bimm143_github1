@@ -1,0 +1,30 @@
+---
+title: "RMarkdown Demo"
+author: "Gabriella Tanoto"
+date: "2025-04-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Week 06 - R Markdown
+
+Code Chunks with [command+option+I]
+```{r}
+#hashtags then Comment.
+head(mtcars,4)
+```
+
+This week we introduce R Markdown.
+```{r}
+
+library(ggplot2)
+ggplot(mtcars)+
+  aes(mpg, disp)+
+  geom_point()+
+  geom_smooth()
+
+```
+
