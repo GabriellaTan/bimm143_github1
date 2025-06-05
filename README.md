@@ -7,7 +7,7 @@ the `gitcreds_set()` function from the [*usethis*] package.
 
 - 04 [Intro to R](https://github.com/GabriellaTan/bimm143_github1/tree/main/Class04)
 
-- 05 [Advanced graphics with **ggplot2**](https://github.com/GabriellaTan/bimm143_github1/tree/main/Class5)
+- 05 [Advanced graphics with **ggplot2**](https://github.com/GabriellaTan/bimm143_github1/tree/main/Class5/Class05.md)
 
 - 06 R functions
 
