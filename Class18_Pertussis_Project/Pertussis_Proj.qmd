@@ -1,0 +1,271 @@
+---
+title: "Class 18 - Pertussis Mini Project"
+author: "Gabriella Tanoto (A18024184)"
+format: pdf
+---
+
+## Background
+
+Pertussis (aka Whooping Cough) is a common lung infection caused by the bacteria *Bordetella pertussis*. 
+
+The CDC tracks cases of [Pertussis](https://www.cdc.gov/pertussis/php/surveillance/pertussis-cases-by-year.html?CDC_AAref_Val=https://www.cdc.gov/pertussis/surv-reporting/cases-by-year.html) in the US, becuase it is a very dangerous potential outbreak. 
+
+## Examine the cases of Pertussis by year
+
+Entering the data from that website using the package `datapasta`. We are going to scrape case numbers from the CDC website. 
+```{r}
+#install.packages("datapasta")
+library(datapasta)
+```
+
+```{r, include=FALSE}
+cdc <- data.frame(
+  year = c(1922L,1923L,1924L,1925L,
+           1926L,1927L,1928L,1929L,1930L,1931L,
+           1932L,1933L,1934L,1935L,1936L,
+           1937L,1938L,1939L,1940L,1941L,1942L,
+           1943L,1944L,1945L,1946L,1947L,
+           1948L,1949L,1950L,1951L,1952L,
+           1953L,1954L,1955L,1956L,1957L,1958L,
+           1959L,1960L,1961L,1962L,1963L,
+           1964L,1965L,1966L,1967L,1968L,1969L,
+           1970L,1971L,1972L,1973L,1974L,
+           1975L,1976L,1977L,1978L,1979L,1980L,
+           1981L,1982L,1983L,1984L,1985L,
+           1986L,1987L,1988L,1989L,1990L,
+           1991L,1992L,1993L,1994L,1995L,1996L,
+           1997L,1998L,1999L,2000L,2001L,
+           2002L,2003L,2004L,2005L,2006L,2007L,
+           2008L,2009L,2010L,2011L,2012L,
+           2013L,2014L,2015L,2016L,2017L,2018L,
+           2019L,2020L,2021L,2022L,2023L, 2024L),
+  cases = c(107473,164191,165418,152003,
+            202210,181411,161799,197371,
+            166914,172559,215343,179135,265269,
+            180518,147237,214652,227319,103188,
+            183866,222202,191383,191890,109873,
+            133792,109860,156517,74715,69479,
+            120718,68687,45030,37129,60886,
+            62786,31732,28295,32148,40005,
+            14809,11468,17749,17135,13005,6799,
+            7717,9718,4810,3285,4249,3036,
+            3287,1759,2402,1738,1010,2177,2063,
+            1623,1730,1248,1895,2463,2276,
+            3589,4195,2823,3450,4157,4570,
+            2719,4083,6586,4617,5137,7796,6564,
+            7405,7298,7867,7580,9771,11647,
+            25827,25616,15632,10454,13278,
+            16858,27550,18719,48277,28639,32971,
+            20762,17972,18975,15609,18617,
+            6124,2116,3044,7063, 35493)
+       )
+```
+
+> Q1. Make a plot of the pertussis cases per year using ggplot.
+
+```{r}
+library(ggplot2)
+case.year_plot <- ggplot(cdc) +
+                    aes(x = year, y= cases) +
+                    geom_point() +
+                    geom_line() +
+                    theme_bw() 
+case.year_plot
+```
+
+> Q2. Add some key timepoints in our history of interaction of Pertussis. These include the: wP roll-out first vaccine (1946) and the switch to aP (1996).
+
+```{r}
+case.year_plot + 
+  geom_vline(xintercept = 1946, color = "red", linetype= "dashed") +
+  geom_vline(xintercept = 1996, color = "blue", linetype= "dashed") +
+  geom_vline(xintercept = 2020, col = "purple", linetype= "dashed")
+```
+
+The red line here is when the first pertussis (whole-cell) vaccine is distributed. The cases dropped intensely throughout the years as everyone started getting the vaccination.
+
+The blue line is when the aP starts getting distributed. The cases went up again about 10 years after the aP vaccine switch. Mounting evidence suggests that the newer **ap** vaccine is less effective in the long term than the wP vaccine that was replaces. The vaccine efficacy wanes faster than the wP version. The immune response built from the aP vaccine is not as permanent as the old vaccine.
+
+
+## The CMI-PB project
+
+CMI-PB (Computational Models of Immunity - Pertussis boost) goal is to investigate how immune system responds differently with aP vs wP vaccinated individuals and to predict the resurgence. We want to see what information is different between the two conditions, so we can design a better treatment in the future.
+
+The program studies the immune composition (antibody titers) of different individuals vaccinated by aP & wP, after a Tdap booster shot (this is as if we get infected by the Pertussis itself).
+
+CMI-PB makes all their collected data available and they store it in a database composed of different tables. Here, we will access a few of these. 
+
+```{r}
+library(jsonlite)
+
+subject <- read_json("https://www.cmi-pb.org/api/v5_1/subject", 
+                     simplifyVector = T)
+head(subject, 3)
+```
+
+> Q3. How many subjects (i.e., enrolled people) are there in this dataset?
+
+```{r}
+nrow(subject)
+```
+There are 172 people enrolled in this study.
+
+> Q4. How many aP and wP infancy vaccinated subjects are in the dataset?
+
+```{r}
+table(subject$infancy_vac)
+```
+Typically, we want a 50/50 split, which these samples are pretty similar the wP and aP. 
+
+> Q5. How many Male and Female subjects/patients are in the dataset?
+
+```{r}
+table(subject$biological_sex)
+```
+
+> Q6. What is the breakdown of race and biological sex (e.g. number of Asian females, White males etc…)?
+
+```{r}
+#make a cross table!
+table(subject$race, subject$biological_sex) 
+```
+We want to make the data as representative of the US demographic as much as we can, so we can compute a better prediction.
+
+> Q7. Is this representative of the US demographic?
+
+No, sadly.
+
+
+### Reading in other data
+
+Now, let's read another database table from the CMI-PB. Read about the specimen information and the antibody titers.
+```{r}
+specimen <- read_json("http://cmi-pb.org/api/v5_1/specimen", simplifyVector = T)
+
+ab_titer <- read_json("http://cmi-pb.org/api/v5_1/plasma_ab_titer", simplifyVector = T)
+```
+
+Take a peek of these data:
+```{r}
+head(specimen, 3)
+```
+```{r}
+head(ab_titer, 3)
+```
+
+We want to join the `subject` and `specimen` tables to get more information about everything. 
+For this, we'll use the `dplyr` package, specifically the `*_join()` functions. 
+
+- `inner_join()`: only take complete data, omit the ones that are not the same between the two.
+- `full_join()`: take all data, whether or not every row are contained by both dataset.
+
+```{r}
+library(dplyr)
+
+meta <- inner_join(subject, specimen)
+head(meta, 3)
+```
+
+Completing the metadata with the antibody information:
+```{r}
+meta_ab <- inner_join(meta, ab_titer)
+head(meta_ab, 6)
+```
+
+```{r}
+dim(meta_ab)
+```
+
+
+> Q8. How many antibody isotypes are there?
+
+```{r}
+table(meta_ab$isotype)
+```
+There are 5 antibody isotypes. Different vaccines can induce different subtypes of the IgG.
+
+> Q9. How many different antigens are measured in this dataset?
+
+```{r}
+table(meta_ab$antigen)
+```
+15 differnet antigens. The measles is for control.
+
+> Q10. Make boxplot of antigen levels accross the whole dataset. 
+
+```{r}
+ggplot(meta_ab) +
+  aes(x = MFI, y= antigen) + 
+  geom_boxplot() +
+  theme_bw()
+```
+
+> Are there obvious differences between the aP and wP values?
+
+```{r}
+ggplot(meta_ab) +
+  aes(x = MFI, y= antigen, color = infancy_vac) + 
+  geom_boxplot() +
+  theme_bw()
+```
+
+Or we can facet by infancy_vac
+```{r}
+ggplot(meta_ab) +
+  aes(x = MFI, y= antigen) + 
+  geom_boxplot() +
+  facet_wrap(~infancy_vac) +
+  theme_bw()
+```
+
+
+## Focusing on just IgG levels
+
+IgG is the most abundant antibody in the blood. With four subclasses, it is crucial for long term immunity and responding to bacteria and viral infections.
+
+```{r}
+igG <- meta_ab |> 
+            filter(isotype == "IgG")
+head(igG, 4)
+```
+Making the same boxplot of antigens, but specific to just these IgG data
+
+```{r}
+ggplot(igG) +
+  aes(MFI_normalised, antigen, color = infancy_vac) +
+  geom_boxplot() +
+  theme_bw() +
+  facet_wrap(~visit)
+```
+Focusing in on just one Antigen -- *PT* -- in just one dataset, the *2021* dataset!
+It's Pertussis Toxin, the main toxin of the bacteria. 
+
+```{r}
+table(igG$dataset)
+```
+```{r}
+pt_igg <- meta_ab |> 
+               filter(isotype =="IgG", 
+                      antigen =="PT", 
+                      dataset =="2021_dataset")
+head(pt_igg, 4)
+dim(pt_igg)
+```
+
+Make a plot of the MFI overtime. With the MFI (normalized) on Y axis and the time as the x.
+```{r}
+ggplot(pt_igg) +
+  aes(x = actual_day_relative_to_boost , y = MFI_normalised, 
+      col = infancy_vac,
+      group = subject_id) +
+  geom_point() +
+  geom_line() + 
+  geom_vline(xintercept = 0, col = "black") +
+  geom_vline(xintercept = 14, col = "black") +
+  ylab("Normalized MFI") + xlab("Days relative to booster shot")+
+  theme_bw() 
+```
+
+See, around day 14, it seems interesting that the wP is showing higher peaks than the aP individuals. This difference is a promising indicator, since we can see that it differs between the two samples.  
+
+

@@ -1,0 +1,60 @@
+---
+title: "Class19-Cancer"
+author: "Gabriella Tanoto A18024184"
+format: html
+---
+
+```{r}
+library (bio3d)
+```
+
+
+```{r}
+cancer_fasta <- read.fasta("A18024184_mutant_seq.fa")
+```
+
+```{r}
+cancer_fasta
+```
+
+Find the one where it's not the same between the two.
+```{r}
+muts <- which(conserv(cancer_fasta) < 1)
+```
+
+To see each amino acid that is non-conserved, identified by  `muts` above:
+```{r}
+cancer_fasta$ali[, muts]
+
+```
+
+Now, we know that the following amino acid in these specified vector position are:
+
+- Y806V
+- Y900E
+- L923R
+- G938Y
+
+# for the Alphafold result
+
+```{r}
+AF_file <- list.files(path="class19_92203/",
+                      pattern=".a3m$",
+                      full.names = TRUE)
+AF_file
+AF_algn <- read.fasta(AF_file[1], to.upper = T)
+dim(AF_algn$ali)
+```
+
+
+Here, we are looking at the conserved regions, at a cutoff of 0.6
+```{r}
+# look for conserved region
+con <- consensus(AF_algn, cutoff = 0.6)
+con$seq
+```
+
+
+
+
+

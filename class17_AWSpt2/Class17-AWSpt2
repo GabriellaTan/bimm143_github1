@@ -1,0 +1,95 @@
+The command that worked to log into the AWS server today:
+ssh -i ~/Downloads/BIMM143_GTan.pem ubuntu@ec2-54-214-189-205.us-west-2.compute.amazonaws.com
+
+The largestbioinformatics database, ran by the EBI: SRA (Sequence Read Archives)
+Researchers are required to submit all of their sequencing reads into this website. 
+
+IT IS A HUGE DATABASE, WE HAVE TO USE AWS (super computers) TO USE IT.
+To get it, we need to install the software to get the SRA. 
+
+# Download
+curl -O https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/current/sratoolkit.current-ubuntu64.tar.gz
+
+# Unzip and Untar
+gunzip sratoolkit.current-ubuntu64.tar.gz
+tar -xvf sratoolkit.current-ubuntu64.tar
+^ `tar` = tape archive
+
+# Typing the full path is annoying and it will make u type something wrong. 
+So, let's make it easier.
+
+- echo: will print out things 
+echo $PATH
+/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+
+# this shows every commands we have in unix. 
+Now we want to make SRAtoolkit as one of our commands, so it makes it easier for us to go back here.
+
+export PATH=$PATH:/home/ubuntu/class17/sratoolkit.3.2.1-ubuntu64/bin
+
+Now, if we type in the:
+> echo $PATH
+
+We will get:
+> /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/ubuntu/class17/sratoolkit.3.2.1-ubuntu64/bin
+
+To get a dataset from a study in NCBI, we need the Accession number. 
+> prefetch SRR600956
+> fastq-dump SRR600956/ #will download the fastq files!
+> fastq-dump --split-3 SRR2156848 #will download the files into separate files.
+
+Now, to check if we have downloaded the whole thing successfully, we can use cmd:
+> grep -c ">" fasta.file
+
+For the fastq file, we use:
+> grep -c "@SRR" [SRR600956.fastq] 
+# we want to add the @SRR because @ is also a QC character. 
+
+
+> grep -c "@SRR" *.fastq
+output: counts all fastq's in each files!
+>  SRR2156848_1.fastq:2959900
+>  SRR2156848_2.fastq:2959900
+>  SRR2156849_1.fastq:2985576
+>  SRR2156849_2.fastq:2985576
+>  SRR2156850_1.fastq:2669778
+>  SRR2156850_2.fastq:2669778
+>  SRR2156851_1.fastq:2369745
+>  SRR2156851_2.fastq:2369745
+>  SRR600956.fastq:25849655
+
+
+Now, we use Kallisto app - 
+> to install:
+wget https://github.com/pachterlab/kallisto/releases/download/v0.44.0/kallisto_linux-v0.44.0.tar.gz
+
+> Unzip & untar:
+gunzip kallisto[TAB]
+tar -xvf kallisto[TAB] 
+
+Kallisto helps analyze the genes in our sequencing reads, in kmers. 
+Now, we need to enter it into our system using PATH so it can help us use its functions faster.
+> export PATH=$PATH:/home/ubuntu/kallisto_linux-v0.44.0
+
+# Build an index using a reference genome (have to download file first)
+kallisto index -i hg19.ensembl Homo_sapiens.GRCh37.67.cdna.all.fa
+
+# Getting a quantification of expression of each genes:
+kallisto quant -i hg19.ensembl -o SRR2156848_quant SRR2156848_1.fastq SRR2156848_2.fastq
+
+# Making this prev. command simultaneously by using a nano file ([FILENAME].sh) !
+Write down the three commands for each files. 
+Then, we can put in `&` if we want it to run in the background, all three simultaneously.
+
+> chmod +x [FILENAME].sh   # to tell UNIX that this file is a run-able program.
+> ./[FILENAME].sh          #run!!!
+
+Once we get all the quant data back, we can send it to our local computaH!!!
+> scp -r -i /Users/abel/Downloads/BIMM143_GTan.pem ubuntu@ec2-54-214-189-205.us-west-2.compute.amazonaws.com:/home/ubuntu/class17/*_quant .
+
+^ the `.` s to make it download to the directory we are at 
+
+
+# +++++++++++  HOMEWORK:  +++++++++++
+all the Downstream analysis.
+
