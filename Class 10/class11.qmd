@@ -3,7 +3,7 @@ title: "Class11: AlphaFold"
 author: "Gabriella Tanoto (A18024184)"
 format: pdf
 toc: true
-
+prefer-html: true
 ---
 # Background -- Before AlphaFold: Structural prediction
 
@@ -168,7 +168,7 @@ dim(aln$ali)
 ```
 
 Next, we score the conserved residues in our alignment using the `conserv()`:
-```{r}
+```{r, eval=FALSE}
 cnsv <- conserv(aln)
 plotb3(cnsv[1:99], sse=trim.pdb(pdb, chain="A"),
        ylab="Conservation Score")
@@ -182,7 +182,7 @@ con$seq
 
 Now, we can look at these conserved atoms in Mol* by making a file that maps the conservation score to the Occupancy column of the PDB file. This file can then be viewed in Mol* and other platforms.
 
-```{r}
+```{r, eval=FALSE}
 m1.pdb <- read.pdb(pdb.files[1])
 occ <- vec2resno(c(cnsv[1:99], cnsv[1:99]), m1.pdb$atom$resno)
 write.pdb(m1.pdb, o=occ, file="m1_conserv.pdb")

@@ -3,6 +3,7 @@ title: "Class10 - Structural Bioinformatics pt 1"
 author: "Gabriella Tanoto (A18024184)"
 format: html
 toc: true
+prefer-html: true
 ---
 
 # 1. Introduction to the RCSB Protein Data Bank (PDB)
