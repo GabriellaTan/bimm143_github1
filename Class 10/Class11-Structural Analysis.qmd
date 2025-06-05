@@ -2,6 +2,7 @@
 title: "Class11: Comparative Structural Analysis"
 author: "Gabriella Tanoto (A18024184)"
 format: pdf
+prefer-html: true
 ---
 
 Load the packages we will need to analyze protein structures. `MSA` package can help with our alignment!
