@@ -1,0 +1,101 @@
+Nano is a very basic text editor. It's also available everywhere!
+
+----------------------------------------------------------------
+Learning UNIX:
+
+- pwd: print working directory -- where you're at.
+- cd: to move between directories.
+- ls: know what's there (in the directory you're at).
+- rm: BE CAREFUL, will remove stuff forever and ever.
+- nano: very tiny text editor. It is in whatever machine u're at. 
+        You can type texts here :D
+        To get out of nano, you can press CONTROL(^) + X.
+- mkdir: make directory -- to make a new folder!
+
+----------------------------------------------------------------
+
+Unix is reaaally good at opening Text files, it doesn't have to load up the 
+whole file to get something.
+
+You can use: 
+`head` or `tail` to preview some of the file!
+
+IMPORTANT COMMAND to preview the whole file: `less` 
+It is to see the whole document, page-by-page! 
+Click Space bar to go page by page. we can get out of the `less` 
+by pressing q (like nano). 
+
+-----------------------------------------------------------------
+- head: preview first few lines (determine by writing -(somenumber))
+- tail: preview last few lines (determine by writing -(somenumber))
+- less: preview the whole document, page-by-page. "Less is More" type ahh.
+-----------------------------------------------------------------
+
+ 		 HIERARCHICAL ORGANIZATION OF THE UNIX STRUCTURE
+The root of the file system is the base of your computer -- probably hard drive. 
+Then, there are directories where they branches. 
+
+When you pwd, it'll give u the path to where you're at. 
+If we are at the User/abel page, when you type in the `cd Desktop` you can go to 
+the directory because it's a subdirectory of where you were at --> RELATIVE path. 
+`pwd` command will give u the ABSOLUTE path. This will allow you to move anywhere 
+from anywhere. 
+
+--------------------------- USEFUL SHORTCUTS ---------------------------------
+                          
+- [TAB] : autocomplete whatever you type as long as it's unique from the others.
+- ~   : home area
+- ../ : dropping to "parent" directory (the one before yours!)
+- *[.gz]: Wild Card to get all the things that contains whatever you put after it (i.e., .gz).
+- >   : pipe, to get the results into a file (can be a faa file or a text file!)
+
+## AWS - Amazon Super Computer
+
+Instance ID: i-0d55ac911e7fecf54 (BIMM143_Gabriella)
+1. Open an SSH client.
+2. Locate your private key file. The key used to launch this instance is 
+   BIMM143_GTan.pem
+3. Run this command, if necessary, to ensure your key is not publicly viewable.
+  chmod 400 ~/Downloads/BIMM143_GTan.pem
+4. Connect to your instance using its Public DNS:
+ec2-54-202-218-197.us-west-2.compute.amazonaws.com
+
+Example:
+ssh -i ~/Downloads/BIMM143_GTan.pem ubuntu@ec2-54-202-218-197.us-west-2.compute.amazonaws.com
+
+# ssh -i [KeyFile] user@computer
+# ssh stands for 'Secure SHell'
+
+- curl: c-url (download from a url)
+- gunzip: g-unzip to unzip files
+- grep "[...]" [file u wanna look at] : prints out all things that has [...] in it.
+    - grep -c (or) --count : count the patterns!
+- man: manual -- access the manual for all Unix commands!
+
+
+> Q: How many fasta sequences are in the Zebrafish one?
+ANS: 70571
+
+> Q: How many FASTA in all the sequences we just unzipped?
+ANS: mouse.1 : 57952
+     mouse.2 : 25986
+     zebrafish: 70571
+     
+--------------------------- PROCESS CONTROL -----------------------------
+- ^C = Kill the job
+- ^Z = Put the job on Halt - sleeping
+- ps = processes of each job run
+- kill = killing the job 
+
+
+**to run job on the background we can put `&` at the end of your line.
+
+SAVING THE COPY INTO OUR MACHINE (my lil beautiful laptop)! Here's the code:
+
+scp -i /Users/abel/Downloads/BIMM143_GTan.pem ubuntu@ec2-54-202-218-197.us-west-2.compute.amazonaws.com:/home/ubuntu/work/mm-second.x.zebrafish.tsv results_AWSclass16.tsv
+
+
+DOOOO HOMEWORK:::
+Section: "10. Using RStudio online (or locally) to read your output"
+(https://bioboot.github.io/bimm143_S25/class-material/aws_02/)
+
