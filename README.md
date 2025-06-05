@@ -1,5 +1,5 @@
 # BIMM143
-My classwork for BIMM143 Spring 2025 at UCSD
+My classwork for [BIMM143](https://bioboot.github.io/bimm143_S25/) Spring 2025 at UCSD
 
 > To connect my R to my Github website repo, we would wanna generate the password 
 using `create_github_token()` from the [*gitcreds*] package & 
