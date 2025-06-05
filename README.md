@@ -13,4 +13,6 @@ the `gitcreds_set()` function from the [*usethis*] package.
 
 - 07 Machine Learning Intro
 
-- 08 Unsupervised Machine Learning
+- 08 Breast Cancer Mini Project
+
+- 09 
