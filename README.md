@@ -9,7 +9,7 @@ the `gitcreds_set()` function from the [*usethis*] package.
 
 - 02 [PDF - Sequence Alignment, Database Searching](https://github.com/GabriellaTan/bimm143_github1/blob/3b2466ee0b7c87b2fe21c3aa827ef4e56ce4d940/Tanoto%20-%20lab2.pdf)
 
-- 03 [PDF - 
+- 03 [PDF - Advanced Database Search](https://github.com/GabriellaTan/bimm143_github1/blob/a3eb10b5444e8ec76c6cb7a164d174e60291ffe2/Tanoto%20-%20lab03.pdf)
 
 - 04 [Intro to R](https://github.com/GabriellaTan/bimm143_github1/blob/b1d33053d2929dc7b9259a2e853136f2eaeafbc2/Class04/Class4.R)
 
